@@ -1,36 +1,12 @@
 from Neuron import Neuron
+from Layer import Layer
 class Network:
-    input_neurons = []
+    input_layer: Layer
+    output_layer: Layer
+    hidden_layers: list[Layer]
 
-
-    network_shape = {
-        'layers': {
-            'input': {
-                'k': 256,
-                'activation_function': 'sigmoid'
-            },
-
-            'hidden1': {
-                'n1': 10,
-                'activation_function': 'sigmoid'
-            },
-
-            'hidden2': {
-                'n2': 10,
-                'activation_function': 'sigmoid'
-            },
-
-            # ...
-
-            'output': {
-                'J': 10,
-                'activation_function': 'softmax'
-            }
-        }
-    }
-
-    def __init__(self, shape: dict):
-        pass
+    def __init__(self, network_shape: dict):
+        self.input_layer = network_shape
 
 
     def backpropagate(self):
