@@ -7,3 +7,11 @@ def sigmoid(x: float) -> float:
 
 def derived_sigmoid(x: float) -> float:
     return sigmoid(x) * (1 - sigmoid(x))
+
+def identity(x: float) -> float:
+    return x
+
+activation_functions = {
+    'sigmoid': sigmoid,
+    'identity': identity
+}
