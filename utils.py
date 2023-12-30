@@ -19,3 +19,8 @@ activation_functions = {
     'sigmoid': sigmoid,
     'identity': identity
 }
+
+
+def normal_distribution(n):
+    sigma = np.sqrt(2 / n)
+    return np.random.normal(0, sigma, size = (n,))
