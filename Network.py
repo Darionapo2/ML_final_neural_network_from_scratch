@@ -1,6 +1,7 @@
 from Neuron import Neuron
 from Layer import Layer
 from utils import sigmoid, activation_functions, normal_distribution
+import numpy as np
 
 
 class Network:
@@ -36,19 +37,26 @@ class Network:
         return f'<Network({str(self.input_layer)}, {", ".join(str_hls)}, {str(self.output_layer)})>'
 
     def set_weights(self):
-        n_layer_before = 0;
-        n = 0
+        n_layer_before = 0
+
         for layer in self.hidden_layers + [self.output_layer]:
             for neuron in layer.neurons:
                 if n_layer_before == 0:
-                    n = self.input_layer.n
-                neuron.weights = normal_distribution(n)
-                n_layer_before = layer.n
+                    n_layer_before = self.input_layer.n
+                neuron.weights = normal_distribution(n_layer_before)
+            n_layer_before = layer.n
 
-    def forwardpropagate(self):
-        for hidden_layer in self.hidden_layers:
-            for neuron in hidden_layer.neurons:
-                pass
+    def forwardpropagate(self, input_data: list[float]):
+
+        all_layers = [self.input_layer] + self.hidden_layers + [self.output_layer]
+        for i, layer in enumerate(all_layers):
+            if i != 0:
+                prior_layer_outputs = [nr.out for nr in self.output_layer.neurons]
+            for neuron in layer.neurons:
+                neuron.net = neuron.bias + np.sum(np.multiply(
+                    prior_layer_outputs, neuron.weights))
+
+                neuron.out = neuron.activation_function(neuron.net)
 
     def backpropagate(self):
         pass

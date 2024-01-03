@@ -3,7 +3,8 @@ from utils import sigmoid
 
 
 class Neuron:
-    activation_value: float
+    net: float
+    out: float
     bias: float
     activation_function: Callable
     weights = list[float]
@@ -12,5 +13,5 @@ class Neuron:
         self.activation_function = activation_function
 
     def __str__(self):
-        return f'<Neuron({str(self.activation_function)}, value = {self.activation_value}, ' \
+        return f'<Neuron({str(self.activation_function)}, value = {self.net}, ' \
                f'bias = {self.bias})>'
