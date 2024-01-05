@@ -1,4 +1,7 @@
 from typing import Callable
+
+import numpy as np
+
 from utils import sigmoid
 from Neuron import Neuron
 
@@ -33,3 +36,10 @@ class Layer:
 
     def get_output_values(self) -> list[float]:
         return [nr.out for nr in self.neurons]
+
+    def get_weights(self):
+        return [nr.weights for nr in self.neurons]
+
+    def input_weights_from_matrix(self, weights_m: np.array):
+        for i, w_row in enumerate(weights_m):
+            self.neurons[i] = w_row

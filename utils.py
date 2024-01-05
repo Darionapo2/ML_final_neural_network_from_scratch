@@ -21,9 +21,13 @@ activation_functions = {
 }
 
 
-def normal_distribution(n):
+def normal_distribution(n: int) -> np.ndarray:
     sigma = np.sqrt(2 / n)
     return np.random.normal(0, sigma, size = (n,))
+
+
+def ones(n: int) -> list[int]:
+    return [1] * n
 
 
 def distance(x1: np.ndarray, x2: np.ndarray) -> float:

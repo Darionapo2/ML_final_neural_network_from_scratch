@@ -2,6 +2,7 @@ from Neuron import Neuron
 from Layer import Layer
 from utils import sigmoid, activation_functions, normal_distribution, distance
 import numpy as np
+from typing import Callable
 
 
 class Network:
@@ -36,21 +37,40 @@ class Network:
         str_hls = [str(hl) for hl in self.hidden_layers]
         return f'<Network({str(self.input_layer)}, {", ".join(str_hls)}, {str(self.output_layer)})>'
 
-    def set_weights(self):
-        n_layer_before = 0
+    def get_hidden_layers(self):
+        return self.hidden_layers
 
-        for layer in self.hidden_layers + [self.output_layer]:
+    def get_input_layer(self):
+        return self.input_layer
+
+    def get_output_layer(self):
+        return self.output_layer
+
+    def get_layers(self):
+        return [self.input_layer] + self.hidden_layers + [self.output_layer]
+
+    def get_weighted_layers(self):
+        return self.hidden_layers + [self.output_layer]
+
+    def set_weights(self):
+        self._set_weights(criteria = normal_distribution)
+
+    def _set_weights(self, criteria: Callable):
+        n_prev_layer = 0
+
+        for layer in self.get_weighted_layers():
             for neuron in layer.neurons:
-                if n_layer_before == 0:
-                    n_layer_before = self.input_layer.n
-                neuron.weights = normal_distribution(n_layer_before)
-            n_layer_before = layer.n
+                if n_prev_layer == 0:
+                    n_prev_layer = self.input_layer.n
+                neuron.weights = criteria(n_prev_layer)
+            n_prev_layer = layer.n
 
     def forwardpropagate(self, input_data: list[float]):
 
         self.input_layer.feed(input_data)
+        self.input_layer.activate()
 
-        all_layers = [self.input_layer] + self.hidden_layers + [self.output_layer]
+        all_layers = self.get_layers()
 
         for prior_layer, current_layer in zip(all_layers, all_layers[1:]):
             prior_layer_outputs = prior_layer.get_output_values()
@@ -67,6 +87,14 @@ class Network:
     def evaluate_results(self, reference: list[float]):
         results = np.ndarray(self.output_layer.get_output_values())
         return distance(results, np.ndarray(reference))
+
+    def get_output(self):
+        return self.output_layer.get_output_values()
+
+    def get_weights(self):
+        weights = [hl.get_weights() for hl in self.hidden_layers]
+        weights.append(self.output_layer.get_weights())
+        return weights
 
     def backpropagate(self):
         pass
