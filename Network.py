@@ -1,6 +1,6 @@
 from Neuron import Neuron
 from Layer import Layer
-from utils import sigmoid, activation_functions, normal_distribution
+from utils import sigmoid, activation_functions, normal_distribution, distance
 import numpy as np
 
 
@@ -48,15 +48,25 @@ class Network:
 
     def forwardpropagate(self, input_data: list[float]):
 
-        all_layers = [self.input_layer] + self.hidden_layers + [self.output_layer]
-        for i, layer in enumerate(all_layers):
-            if i != 0:
-                prior_layer_outputs = [nr.out for nr in self.output_layer.neurons]
-            for neuron in layer.neurons:
-                neuron.net = neuron.bias + np.sum(np.multiply(
-                    prior_layer_outputs, neuron.weights))
+        self.input_layer.feed(input_data)
 
-                neuron.out = neuron.activation_function(neuron.net)
+        all_layers = [self.input_layer] + self.hidden_layers + [self.output_layer]
+
+        for prior_layer, current_layer in zip(all_layers, all_layers[1:]):
+            prior_layer_outputs = prior_layer.get_output_values()
+
+            current_layer_input = [
+                nr.bias + np.sum(
+                    np.multiply(prior_layer_outputs, nr.weights)
+                ) for nr in current_layer.neurons
+            ]
+
+            current_layer.feed(current_layer_input)
+            current_layer.activate()
+
+    def evaluate_results(self, reference: list[float]):
+        results = np.ndarray(self.output_layer.get_output_values())
+        return distance(results, np.ndarray(reference))
 
     def backpropagate(self):
         pass

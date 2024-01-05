@@ -24,3 +24,7 @@ activation_functions = {
 def normal_distribution(n):
     sigma = np.sqrt(2 / n)
     return np.random.normal(0, sigma, size = (n,))
+
+
+def distance(x1: np.ndarray, x2: np.ndarray) -> float:
+    return sum(np.subtract(np.power(x1, 2), np.power(x2, 2)))
