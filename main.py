@@ -33,32 +33,41 @@ def main():
 
     # digits_network = Network(digits_network_shape)
 
-    wih = np.array([[1, 2],
-                    [3, 4]])
+    wih = np.array([[-1, 2],
+                    [3, -4]])
 
-    who = np.array([2, 1])
+    who = np.array([[2, -1]])
 
     simple_network = Network(simple_network_shape)
     # simple_network._set_weights(ones)
 
-    weighted_layers = simple_network.get_weighted_layers()
-    first_hidden_layer = weighted_layers[0]
-    output_layer = weighted_layers[1]
+    simple_network.hidden_layers[0].input_weights_from_matrix(wih)
+    simple_network.output_layer.input_weights_from_matrix(who)
 
     w = simple_network.get_weights()
-    print(w)
+    print('weights:', w)
 
     print(simple_network.input_layer)
     print(simple_network.hidden_layers[0])
     print(simple_network.output_layer)
 
-    simple_network.forwardpropagate([1.2, 4.5])
+    input_vector = np.array([2, 3])
+    simple_network.forwardpropagate(input_vector)
     out = simple_network.get_output()
-    print(out)
+    print('output: ', out)
 
-    print(sigmoid(1.2 + 4.5))
-    print(sigmoid(1.2 + 4.5) * 2)
-    print(sigmoid(sigmoid(1.2 + 4.5) * 2))
+    # TEST
+    print('test...')
+    y1 = np.matmul(wih, np.transpose(input_vector))
+    vectorized_sigmoid = np.vectorize(sigmoid)
+    y1_out = vectorized_sigmoid(y1)
+
+    print(y1_out)
+
+    y2 = np.matmul(who, np.transpose(y1_out))
+    y2_out = vectorized_sigmoid(y2)
+
+    print(y2_out)
 
 
 if __name__ == '__main__':

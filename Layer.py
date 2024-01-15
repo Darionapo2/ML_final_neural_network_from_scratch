@@ -7,7 +7,7 @@ from Neuron import Neuron
 
 
 class Layer:
-    neurons: list
+    neurons: list[Neuron]
     n: int
     activation_f: Callable
 
@@ -19,7 +19,7 @@ class Layer:
     def __str__(self) -> str:
         return f'<Layer({self.n}, {self.activation_f})>'
 
-    def feed(self, input_data: list[float]) -> bool:
+    def feed(self, input_data: np.array) -> bool:
 
         if len(input_data) != self.n:
             print('Error: invalid input data.')
@@ -37,9 +37,9 @@ class Layer:
     def get_output_values(self) -> list[float]:
         return [nr.out for nr in self.neurons]
 
-    def get_weights(self):
+    def get_weights(self) -> list[float]:
         return [nr.weights for nr in self.neurons]
 
     def input_weights_from_matrix(self, weights_m: np.array):
         for i, w_row in enumerate(weights_m):
-            self.neurons[i] = w_row
+            self.neurons[i].weights = w_row
