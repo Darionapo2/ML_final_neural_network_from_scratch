@@ -1,9 +1,9 @@
 from Network import Network
 import numpy as np
-from utils import sigmoid, ones
+from utils import sigmoid, ones, error, normal_distribution
 
 
-def read_dataset(path: str = 'datasets/digits/train_digits.dat'):
+def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> list:
     with open(path, 'r+') as dataset:
         text = dataset.read()
         lines = text.split('\n')
@@ -14,7 +14,7 @@ def read_dataset(path: str = 'datasets/digits/train_digits.dat'):
         for line in lines:
             data.append(np.array(line.split(' '), dtype = int))
 
-        # print(len(data[1]))
+    return data
 
 
 def main():
@@ -69,6 +69,32 @@ def main():
 
     print(y2_out)
 
+    # TEST WITH DIGITS DATASET:
+    data = read_dataset('datasets/digits/test_digits.dat')
+    input_data = data[1][:-10]
+    reference = data[1][256:]
+    print(len(input_data), len(reference))
+
+    digits_network = Network(digits_network_shape)
+    digits_network.forwardpropagate(input_data)
+    output = digits_network.output_layer.get_output_values()
+
+    # digits_network.backpropagate(reference)
+
+    print('first hidden layer weights:', digits_network.hidden_layers[0].get_weights())
+
+
+
+def main2():
+    digits_network_shape = [
+        {'neurons_number': 256, 'activation_f': ''},
+        {'neurons_number': 8, 'activation_f': 'sigmoid'},
+        {'neurons_number': 8, 'activation_f': 'sigmoid'},
+        {'neurons_number': 10, 'activation_f': 'sigmoid'}
+    ]
+
+    d_network = Network(digits_network_shape)
+    d_network.
 
 if __name__ == '__main__':
     main()

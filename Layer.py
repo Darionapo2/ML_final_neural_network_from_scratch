@@ -2,8 +2,8 @@ from typing import Callable
 
 import numpy as np
 
-from utils import sigmoid
 from Neuron import Neuron
+from utils import sigmoid
 
 
 class Layer:

@@ -1,5 +1,8 @@
 from math import pow, e
 import numpy as np
+from Layer import *
+import Layer
+
 from numpy import typing
 
 
@@ -20,6 +23,10 @@ activation_functions = {
     'identity': identity
 }
 
+derivatives = {
+    'sigmoid': derived_sigmoid
+}
+
 
 def normal_distribution(n: int) -> np.ndarray:
     sigma = np.sqrt(2 / n)
@@ -30,5 +37,13 @@ def ones(n: int) -> list[int]:
     return [1] * n
 
 
-def distance(x1: np.ndarray, x2: np.ndarray) -> float:
-    return sum(np.subtract(np.power(x1, 2), np.power(x2, 2)))
+def error(x1: np.ndarray, x2: np.ndarray) -> float:
+    return sum(np.power(np.subtract(x1, x2), 2)) / len(x1)
+
+
+def get_error_vector(d: np.array, layer: Layer):
+    pass
+
+
+def get_difference(d: np.array, o: np.array):
+    return np.subtract(d, o)

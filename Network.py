@@ -1,6 +1,6 @@
-from Neuron import Neuron
-from Layer import Layer
-from utils import sigmoid, activation_functions, normal_distribution, distance
+from Layer import *
+from utils import sigmoid, activation_functions, derivatives, error, get_difference, \
+    normal_distribution
 import numpy as np
 from typing import Callable
 
@@ -86,7 +86,7 @@ class Network:
 
     def evaluate_results(self, reference: list[float]):
         results = np.ndarray(self.output_layer.get_output_values())
-        return distance(results, np.ndarray(reference))
+        return error(results, np.ndarray(reference))
 
     def get_output(self):
         return self.output_layer.get_output_values()
@@ -95,8 +95,41 @@ class Network:
         weights = [hl.get_weights() for hl in self.hidden_layers]
         weights.append(self.output_layer.get_weights())
 
-
         return weights
 
-    def backpropagate(self):
+    def backpropagate(self, d: list[float]):
+        delta = []
+
+        outs = self.output_layer.get_output_values()
+        diff_vector = get_difference(d, outs)
+
+        out_activation_f = self.output_layer.activation_f.__name__
+        derived_act_function = derivatives[out_activation_f]
+
+        derivs = [derived_act_function(nr.net) for nr in self.output_layer.neurons]
+        delta.append(np.multiply(diff_vector, derivs))
+
+        reversed_layers = self.get_layers()[::-1]
+        # previous_layer ==> h + 1, in respect of the inverted order of layers
+        # current_layer ==> h
+        previous_layer_index = 0  # to keep count of which layer number is the previous layer
+        for previous_layer, current_layer in zip(reversed_layers, reversed_layers[:-1]):
+            new_delta = []
+            for j, current_neuron in enumerate(current_layer.neurons):
+                inc_weighted_error = 0
+                for i, prev_layer_nr in enumerate(previous_layer.neurons):
+                    inc_weighted_error += prev_layer_nr.weights[j] * delta[previous_layer_index][i]
+
+                current_layer_act_f = current_layer.activation_f.__name__
+                current_layer_derived_act_f = derivatives[current_layer_act_f]
+
+                new_delta.append(inc_weighted_error * current_layer_derived_act_f(
+                    current_neuron.net))
+
+            delta.append(new_delta)
+            previous_layer_index += 1
+
+        print(delta)
+
+    def train(self):
         pass
