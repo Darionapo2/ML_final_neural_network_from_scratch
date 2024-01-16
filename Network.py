@@ -94,7 +94,6 @@ class Network:
     def get_weights(self):
         weights = [hl.get_weights() for hl in self.hidden_layers]
         weights.append(self.output_layer.get_weights())
-        print()
 
 
         return weights
