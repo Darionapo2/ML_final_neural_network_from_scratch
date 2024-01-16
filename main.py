@@ -84,17 +84,35 @@ def main():
     print('first hidden layer weights:', digits_network.hidden_layers[0].get_weights())
 
 
-
 def main2():
     digits_network_shape = [
-        {'neurons_number': 256, 'activation_f': ''},
-        {'neurons_number': 8, 'activation_f': 'sigmoid'},
-        {'neurons_number': 8, 'activation_f': 'sigmoid'},
-        {'neurons_number': 10, 'activation_f': 'sigmoid'}
+        {'neurons_number': 2, 'activation_f': ''},
+        {'neurons_number': 2, 'activation_f': 'identity'},
+        {'neurons_number': 1, 'activation_f': 'identity'}
     ]
 
+    wih = np.array([[1, 2],
+                    [3, 4]])
+
+    who = np.array([[2, 3]])
+
     d_network = Network(digits_network_shape)
-    d_network.
+    first_hidden_layer_weights = np.array(d_network.hidden_layers[0].get_weights())
+    all_network_weights = d_network.get_weights()
+    print(all_network_weights)
+
+    d_network.hidden_layers[0].input_weights_from_matrix(wih)
+    d_network.output_layer.input_weights_from_matrix(who)
+
+    d_network.forwardpropagate([1, 3])
+    out = d_network.get_output()
+    print('output:', out)
+
+    E = d_network.evaluate_results([1])
+    print('E:', E)
+
+    d_network.backpropagate([1])
+
 
 if __name__ == '__main__':
-    main()
+    main2()

@@ -18,13 +18,18 @@ def identity(x: float) -> float:
     return x
 
 
+def const_1(x: float) -> int:
+    return 1
+
+
 activation_functions = {
     'sigmoid': sigmoid,
     'identity': identity
 }
 
 derivatives = {
-    'sigmoid': derived_sigmoid
+    'sigmoid': derived_sigmoid,
+    'identity': const_1
 }
 
 

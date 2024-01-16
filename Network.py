@@ -85,8 +85,8 @@ class Network:
             current_layer.activate()
 
     def evaluate_results(self, reference: list[float]):
-        results = np.ndarray(self.output_layer.get_output_values())
-        return error(results, np.ndarray(reference))
+        results = np.array(self.output_layer.get_output_values())
+        return error(results, np.array(reference))
 
     def get_output(self):
         return self.output_layer.get_output_values()
@@ -113,15 +113,24 @@ class Network:
         # previous_layer ==> h + 1, in respect of the inverted order of layers
         # current_layer ==> h
         previous_layer_index = 0  # to keep count of which layer number is the previous layer
-        for previous_layer, current_layer in zip(reversed_layers, reversed_layers[:-1]):
+        for previous_layer, current_layer in zip(reversed_layers, reversed_layers[1:]):
+            print('previous layer:', previous_layer)
+            print('current layer:', current_layer)
             new_delta = []
             for j, current_neuron in enumerate(current_layer.neurons):
+                print('j:', j)
+                print('current neuron:', current_neuron)
                 inc_weighted_error = 0
                 for i, prev_layer_nr in enumerate(previous_layer.neurons):
+                    print('previous_layer_index:', previous_layer_index)
+                    print('i:', i)
+                    print('previous layer neuron:', prev_layer_nr)
                     inc_weighted_error += prev_layer_nr.weights[j] * delta[previous_layer_index][i]
+                    print('incremental weighted error:', inc_weighted_error)
 
                 current_layer_act_f = current_layer.activation_f.__name__
                 current_layer_derived_act_f = derivatives[current_layer_act_f]
+                print('derivative(net):', current_layer_derived_act_f(current_neuron.net))
 
                 new_delta.append(inc_weighted_error * current_layer_derived_act_f(
                     current_neuron.net))
@@ -129,7 +138,7 @@ class Network:
             delta.append(new_delta)
             previous_layer_index += 1
 
-        print(delta)
+        print('delta:', delta)
 
     def train(self):
         pass
