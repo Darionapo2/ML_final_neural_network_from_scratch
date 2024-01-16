@@ -65,7 +65,7 @@ class Network:
                 neuron.weights = criteria(n_prev_layer)
             n_prev_layer = layer.n
 
-    def forwardpropagate(self, input_data: list[float]):
+    def forwardpropagate(self, input_data: np.array):
 
         self.input_layer.feed(input_data)
         self.input_layer.activate()
