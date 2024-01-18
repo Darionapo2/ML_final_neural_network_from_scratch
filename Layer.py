@@ -27,6 +27,7 @@ class Layer:
 
         for i, neuron in enumerate(self.neurons):
             neuron.net = input_data[i]
+            print('bias', i, ' ', neuron.bias)
 
         return True
 
@@ -42,4 +43,10 @@ class Layer:
 
     def input_weights_from_matrix(self, weights_m: np.array):
         for i, w_row in enumerate(weights_m):
-            self.neurons[i].weights = w_row
+            weights = w_row[1:]
+            bias = w_row[0]
+            print('weights: ', weights)
+            print('bias: ', bias)
+
+            self.neurons[i].weights = weights
+            self.neurons[i].bias = bias

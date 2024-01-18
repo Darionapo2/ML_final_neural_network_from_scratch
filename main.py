@@ -1,6 +1,6 @@
 from Network import Network
 import numpy as np
-from utils import sigmoid, ones, error, normal_distribution
+from utils import sigmoid, ones, error, normal_distribution, derived_sigmoid
 
 
 def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> list:
@@ -12,7 +12,7 @@ def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> list:
         del lines[-1]
 
         for line in lines:
-            data.append(np.array(line.split(' '), dtype = int))
+            data.append(np.array(line.split(' '), dtype=int))
 
     return data
 
@@ -87,32 +87,77 @@ def main():
 def main2():
     digits_network_shape = [
         {'neurons_number': 2, 'activation_f': ''},
-        {'neurons_number': 2, 'activation_f': 'identity'},
-        {'neurons_number': 1, 'activation_f': 'identity'}
+        {'neurons_number': 2, 'activation_f': 'sigmoid'},
+        {'neurons_number': 1, 'activation_f': 'sigmoid'}
     ]
 
-    wih = np.array([[1, 2],
-                    [3, 4]])
+    wih = np.array([[1, 1, 2],
+                    [2, 2, 1]])
 
-    who = np.array([[2, 3]])
+    who = np.array([[1, 1, 1]])
 
     d_network = Network(digits_network_shape)
     first_hidden_layer_weights = np.array(d_network.hidden_layers[0].get_weights())
-    all_network_weights = d_network.get_weights()
-    print(all_network_weights)
 
     d_network.hidden_layers[0].input_weights_from_matrix(wih)
     d_network.output_layer.input_weights_from_matrix(who)
 
-    d_network.forwardpropagate([1, 3])
+    input_v = [1, 0]
+
+    d_network.forwardpropagate(input_v)
     out = d_network.get_output()
     print('output:', out)
 
-    E = d_network.evaluate_results([1])
+    E = d_network.evaluate_results([0])
     print('E:', E)
 
-    d_network.backpropagate([1])
+    # to do: remember to insert the dataset as an attribute of the network class
+    deltas = d_network.backpropagate([0], True)
+    change, bias = d_network.accumulatechange(deltas)
+
+    print('change: ', change)
+    print('bias: ', bias)
+
+    for nr in d_network.input_layer.neurons:
+        print(nr)
+
+
+
+
+
+
+
+def test():
+
+    wih = np.array([[1, 1, 2],
+                    [2, 2, 1]])
+
+    who = np.array([[1, 1, 1]])
+
+    print('TEST---------------------')
+    input_v = [1, 1, 0]
+    res_1_l = np.matmul(wih, np.transpose(input_v))
+    print('propagazione dell input al primo hidden layer:', res_1_l)
+    act_res = [sigmoid(r) for r in res_1_l]
+    print('sigmoid applicata ai net value ottenuti:', act_res)
+
+    print('secondo layer (output)--------------')
+
+    res_2_l = np.matmul(who, np.transpose([1.0] + act_res))
+    out = [sigmoid(r) for r in res_2_l]
+    print('out', out)
+
+    reference = 0
+
+    E = (reference - out[0]) ** 2
+    print('error: ', E)
+
+    delta1 = (-2) * (reference - out[0]) * derived_sigmoid(sum(res_2_l))
+    print('delta1: ', delta1)
+
+
 
 
 if __name__ == '__main__':
     main2()
+    test()

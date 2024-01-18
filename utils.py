@@ -43,7 +43,7 @@ def ones(n: int) -> list[int]:
 
 
 def error(x1: np.ndarray, x2: np.ndarray) -> float:
-    return sum(np.power(np.subtract(x1, x2), 2)) / len(x1)
+    return sum(np.power(np.subtract(x1, x2), 2))
 
 
 def get_error_vector(d: np.array, layer: Layer):

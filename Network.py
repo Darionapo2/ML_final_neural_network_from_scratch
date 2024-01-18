@@ -1,3 +1,5 @@
+import pprint
+
 from Layer import *
 from utils import sigmoid, activation_functions, derivatives, error, get_difference, \
     normal_distribution
@@ -53,7 +55,7 @@ class Network:
         return self.hidden_layers + [self.output_layer]
 
     def set_weights(self):
-        self._set_weights(criteria = normal_distribution)
+        self._set_weights(criteria=normal_distribution)
 
     def _set_weights(self, criteria: Callable):
         n_prev_layer = 0
@@ -63,6 +65,7 @@ class Network:
                 if n_prev_layer == 0:
                     n_prev_layer = self.input_layer.n
                 neuron.weights = criteria(n_prev_layer)
+                neuron.bias = criteria(1)[0]
             n_prev_layer = layer.n
 
     def forwardpropagate(self, input_data: np.array):
@@ -71,13 +74,12 @@ class Network:
         self.input_layer.activate()
 
         all_layers = self.get_layers()
-
-        for prior_layer, current_layer in zip(all_layers, all_layers[1:]):
-            prior_layer_outputs = prior_layer.get_output_values()
+        for previous_layer, current_layer in zip(all_layers, all_layers[1:]):
+            previous_layer_outputs = previous_layer.get_output_values()
 
             current_layer_input = [
                 nr.bias + np.sum(
-                    np.multiply(prior_layer_outputs, nr.weights)
+                    np.multiply(previous_layer_outputs, nr.weights)
                 ) for nr in current_layer.neurons
             ]
 
@@ -97,7 +99,7 @@ class Network:
 
         return weights
 
-    def backpropagate(self, d: list[float]):
+    def backpropagate(self, d: list[float], derivative_const: bool = False) -> list[np.array]:
         delta = []
 
         outs = self.output_layer.get_output_values()
@@ -107,24 +109,20 @@ class Network:
         derived_act_function = derivatives[out_activation_f]
 
         derivs = [derived_act_function(nr.net) for nr in self.output_layer.neurons]
+        print('net', [nr.net for nr in self.output_layer.neurons])
+        print('derivs:', derivs)
+        if derivative_const:
+            diff_vector = np.multiply(diff_vector, -2)
         delta.append(np.multiply(diff_vector, derivs))
-
-        reversed_layers = self.get_layers()[::-1]
+        reversed_layers = self.get_weighted_layers()[::-1]
         # previous_layer ==> h + 1, in respect of the inverted order of layers
         # current_layer ==> h
         previous_layer_index = 0  # to keep count of which layer number is the previous layer
         for previous_layer, current_layer in zip(reversed_layers, reversed_layers[1:]):
-            print('previous layer:', previous_layer)
-            print('current layer:', current_layer)
             new_delta = []
             for j, current_neuron in enumerate(current_layer.neurons):
-                print('j:', j)
-                print('current neuron:', current_neuron)
                 inc_weighted_error = 0
                 for i, prev_layer_nr in enumerate(previous_layer.neurons):
-                    print('previous_layer_index:', previous_layer_index)
-                    print('i:', i)
-                    print('previous layer neuron:', prev_layer_nr)
                     inc_weighted_error += prev_layer_nr.weights[j] * delta[previous_layer_index][i]
                     print('incremental weighted error:', inc_weighted_error)
 
@@ -135,10 +133,29 @@ class Network:
                 new_delta.append(inc_weighted_error * current_layer_derived_act_f(
                     current_neuron.net))
 
-            delta.append(new_delta)
+            delta.append(np.array(new_delta))
             previous_layer_index += 1
 
-        print('delta:', delta)
+        print('delta:', delta[::-1])
+        return delta[::-1]
+
+
+    def accumulatechange(self, deltas: list[np.array]) -> tuple[list[np.array], list]:
+        all_layers = self.get_layers()
+        change = []
+        curr_layer_index = 0
+        bias = []
+        for previous_layer, current_layer in zip(all_layers, all_layers[1:]):
+            for j, current_neuron in enumerate(current_layer.neurons):
+                new_change = []
+                for i, prev_layer_nr in enumerate(previous_layer.neurons):
+                    print(' previous_layer.neurons[i].out ', i,  previous_layer.neurons[i].out)
+                    new_change.append(deltas[curr_layer_index][j] * previous_layer.neurons[i].out)
+                bias.append(deltas[curr_layer_index][j])
+                change.append(new_change)
+            curr_layer_index += 1
+
+        return change, bias
 
     def train(self):
         pass
