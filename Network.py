@@ -124,11 +124,11 @@ class Network:
                 inc_weighted_error = 0
                 for i, prev_layer_nr in enumerate(previous_layer.neurons):
                     inc_weighted_error += prev_layer_nr.weights[j] * delta[previous_layer_index][i]
-                    print('incremental weighted error:', inc_weighted_error)
+                    # print('incremental weighted error:', inc_weighted_error)
 
                 current_layer_act_f = current_layer.activation_f.__name__
                 current_layer_derived_act_f = derivatives[current_layer_act_f]
-                print('derivative(net):', current_layer_derived_act_f(current_neuron.net))
+                # print('derivative(net):', current_layer_derived_act_f(current_neuron.net))
 
                 new_delta.append(inc_weighted_error * current_layer_derived_act_f(
                     current_neuron.net))
@@ -136,10 +136,10 @@ class Network:
             delta.append(np.array(new_delta))
             previous_layer_index += 1
 
-        print('delta:', delta[::-1])
+        # print('delta:', delta[::-1])
         return delta[::-1]
 
-
+    # secondo me è da aggiungere anche la modifica del delta passo per passo => delta=delta + change
     def accumulatechange(self, deltas: list[np.array]) -> tuple[list[np.array], list]:
         all_layers = self.get_layers()
         change = []
@@ -149,13 +149,29 @@ class Network:
             for j, current_neuron in enumerate(current_layer.neurons):
                 new_change = []
                 for i, prev_layer_nr in enumerate(previous_layer.neurons):
-                    print(' previous_layer.neurons[i].out ', i,  previous_layer.neurons[i].out)
+                    # print(' previous_layer.neurons[i].out ', i, previous_layer.neurons[i].out)
                     new_change.append(deltas[curr_layer_index][j] * previous_layer.neurons[i].out)
                 bias.append(deltas[curr_layer_index][j])
                 change.append(new_change)
             curr_layer_index += 1
 
         return change, bias
+
+    def adjust_weights(self, weights_gradient: list[np.array], bias_gradient: list, eta: float):
+        layers = self.get_weighted_layers()
+        mu = []
+        updated_weights = []
+        for previous_layer, current_layer in zip(layers[:-1], layers[1:]):
+            mu_layer = []
+            for j, current_neuron in enumerate(current_layer.neurons):
+                updated_weights = current_neuron.weights
+                mu_neuron = 0
+                for i, previous_neuron in enumerate(previous_layer.neurons):
+
+                    updated_weights[j] -= (eta * weights_gradient[i][j])
+
+
+
 
     def train(self):
         pass

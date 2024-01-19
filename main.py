@@ -113,13 +113,23 @@ def main2():
 
     # to do: remember to insert the dataset as an attribute of the network class
     deltas = d_network.backpropagate([0], True)
-    change, bias = d_network.accumulatechange(deltas)
-
-    print('change: ', change)
+    gradient_weights, gradient_bias = d_network.accumulatechange(deltas)
+    '''
+    for i, cha in enumerate(change):
+        for j, ch in enumerate(cha):
+            print(f'change[{i}][{j}]: {ch}')
     print('bias: ', bias)
 
     for nr in d_network.input_layer.neurons:
         print(nr)
+    '''
+    learning_rate = 0.1
+    d_network.adjust_weights(gradient_weights, gradient_bias, learning_rate)
+
+
+
+
+
 
 
 
@@ -160,4 +170,4 @@ def test():
 
 if __name__ == '__main__':
     main2()
-    test()
+    # test()
