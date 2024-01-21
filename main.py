@@ -111,34 +111,35 @@ def main2():
     E = d_network.evaluate_results([0])
     print('E:', E)
 
+    for j, layer in enumerate(d_network.get_weighted_layers()):
+        for i, neuron in enumerate(layer.neurons):
+            for k in range(len(neuron.weights)):
+                print(f'w[{j+1}][{k+1}] = {neuron.weights[k]}')
+            print(f'w[{j+1}][0] = {neuron.bias}')
+
     # to do: remember to insert the dataset as an attribute of the network class
     deltas = d_network.backpropagate([0], True)
     gradient_weights, gradient_bias = d_network.accumulatechange(deltas)
-    '''
-    for i, cha in enumerate(change):
-        for j, ch in enumerate(cha):
-            print(f'change[{i}][{j}]: {ch}')
-    print('bias: ', bias)
+    mu = []
+    mu_bias = []
+    for j, cha in enumerate(gradient_weights):
+        mu.append([])
+        for i, ch in enumerate(cha):
+            print(f'gradient w[{j}][{i}]: {ch}')
+            mu[j].append(0.0)
+        mu_bias.append(0.0)
+        print('gradeint bias: ', gradient_bias[j])
+    print(mu)
+    mu, mu_bias = d_network.adjust_weights(gradient_weights, gradient_bias, 0.9, mu, mu_bias)
 
-    for nr in d_network.input_layer.neurons:
-        print(nr)
-    '''
-    learning_rate = 0.1
-    d_network.adjust_weights(gradient_weights, gradient_bias, learning_rate)
-
-
-
-
-
-
-
-
-
-
+    for j, layer in enumerate(d_network.get_weighted_layers()):
+        for i, neuron in enumerate(layer.neurons):
+            for k in range(len(neuron.weights)):
+                print(f'w[{j}][{k+1}] = {neuron.weights[k]}')
+            print(f'w[{j}][0] = {neuron.bias}')
 
 
 def test():
-
     wih = np.array([[1, 1, 2],
                     [2, 2, 1]])
 
@@ -164,8 +165,6 @@ def test():
 
     delta1 = (-2) * (reference - out[0]) * derived_sigmoid(sum(res_2_l))
     print('delta1: ', delta1)
-
-
 
 
 if __name__ == '__main__':
