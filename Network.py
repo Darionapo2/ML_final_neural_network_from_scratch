@@ -66,6 +66,8 @@ class Network:
                     n_prev_layer = self.input_layer.n
                 neuron.weights = criteria(n_prev_layer)
                 neuron.bias = criteria(1)[0]
+
+                neuron.previous_change = np.zeros(n_prev_layer)
             n_prev_layer = layer.n
 
     def forwardpropagate(self, input_data: np.array):
@@ -140,45 +142,80 @@ class Network:
         return delta[::-1]
 
     # secondo me è da aggiungere anche la modifica del delta passo per passo => delta=delta + change
-    def accumulatechange(self, deltas: list[np.array]) -> tuple[list[np.array], list]:
+    def accumulatechange(self, deltas: list[np.array]):
         all_layers = self.get_layers()
-        change = []
         curr_layer_index = 0
-        bias = []
+
         for previous_layer, current_layer in zip(all_layers, all_layers[1:]):
             for j, current_neuron in enumerate(current_layer.neurons):
-                new_change = []
+                acc_change = []
                 for i, prev_layer_nr in enumerate(previous_layer.neurons):
                     # print(' previous_layer.neurons[i].out ', i, previous_layer.neurons[i].out)
-                    new_change.append(deltas[curr_layer_index][j] * previous_layer.neurons[i].out)
-                bias.append(deltas[curr_layer_index][j])
-                change.append(new_change)
+                    acc_change.append(deltas[curr_layer_index][j] * previous_layer.neurons[i].out)
+                current_neuron.accumulate_change = acc_change
+                current_neuron.accumulate_change_bias = deltas[curr_layer_index][j]
             curr_layer_index += 1
-
-        return change, bias
 
     # posso palesemente usare direttamente current neuron weights ma non mi sembra bello bho, comunque lo toglieremo
     def adjust_weights(self, weights_gradient: list[np.array], bias_gradient: list,
                        learning_rate: float,
                        mu: list[np.array], mu_bias: np.array) -> tuple[list[list], list]:
+        '''
+        :param weights_gradient: change of weights list(list()...list())
+        :param bias_gradient: change of the biases
+        :param learning_rate:
+        :param mu:
+        :param mu_bias:
+        :return:
+        '''
+
         layers = self.get_weighted_layers()
         new_mu = []
         new_mu_bias = []
+
         for previous_layer, current_layer in zip(layers[:-1], layers[1:]):
             for j, current_neuron in enumerate(current_layer.neurons):
+
                 updated_weights = [wh for wh in current_neuron.weights]
                 g_weights_layer = weights_gradient[j]
                 mu_layer = []
+
                 for i, previous_neuron in enumerate(previous_layer.neurons):
                     mu_layer.append(learning_rate * g_weights_layer[i])
                     updated_weights[i] -= (learning_rate * g_weights_layer[i]) + mu[j][i]
-                    print('updated_weights_dentro', updated_weights)
 
-                print(type(updated_weights))
-                print('updated_weights:', updated_weights)
                 current_neuron.weights = updated_weights
                 current_neuron.bias -= learning_rate * bias_gradient[j] + mu_bias[j]
                 new_mu.append(mu_layer)
                 new_mu_bias.append(learning_rate * bias_gradient[j])
 
         return new_mu, new_mu_bias
+
+    def adjust_weights_dario(self, learning_rate: float, momentum: float = 1):
+        w_layers = self.get_weighted_layers()
+
+        for layer in w_layers:
+            for neuron in layer.neurons:
+                acc_change = neuron.accumulate_change
+                acc_change_bias = neuron.accumulate_change_bias
+
+                acc_change_lr = np.multiply(acc_change, learning_rate)
+                acc_change_bias_lr = acc_change_bias * learning_rate
+
+                neuron.weights -= (acc_change_lr + (
+                    np.multiply(momentum, neuron.previous_change)
+                ))
+
+                neuron.bias -= (acc_change_bias_lr + (
+                    np.multiply(momentum, neuron.previous_change_bias)
+                ))
+
+                neuron.previous_change = acc_change_lr
+                neuron.previous_change_bias = acc_change_bias_lr
+
+    def train(self, X, Y):
+        for x, y in zip(X, Y):
+            self.forwardpropagate(x)
+            deltas = self.backpropagate(y)
+            self.accumulatechange(deltas)
+            self.adjust_weights_dario(1)

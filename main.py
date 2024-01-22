@@ -1,6 +1,11 @@
 from Network import Network
+import os
 import numpy as np
 from utils import sigmoid, ones, error, normal_distribution, derived_sigmoid
+import keras
+from keras import layers, models
+
+os.environ['KERAS_BACKEND'] = 'tensorflow'
 
 
 def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple([list, list]):
@@ -90,6 +95,7 @@ def main():
     print('first hidden layer weights:', digits_network.hidden_layers[0].get_weights())
 
 
+'''
 def main2():
     digits_network_shape = [
         {'neurons_number': 2, 'activation_f': ''},
@@ -125,13 +131,6 @@ def main2():
 
     E = d_network.evaluate_results([0])
     print('E:', E)
-    '''
-    loss = d_network.performance_evaluation(input_v,)
-    if epoch > 0 and (best_val_loss - loss) < tolerance:
-        break
-    elif loss < best_val_loss:
-            best_val_loss = loss
-    '''
 
     # to do: remember to insert the dataset as an attribute of the network class
     deltas = d_network.backpropagate([0], True)
@@ -140,6 +139,7 @@ def main2():
     mu, mu_bias = d_network.adjust_weights(gradient_weights, gradient_bias, 0.9, mu, mu_bias)
 
     # final_value = d_network.performance_evaluation(input_v,)
+'''
 
 
 def test():
@@ -208,7 +208,35 @@ def train():
     t_network.forwardpropagate(input_vector)
 
 
+def test3():
+    simple_network_shape = [
+        {'neurons_number': 4, 'activation_f': ''},
+        {'neurons_number': 3, 'activation_f': 'sigmoid'},
+        {'neurons_number': 2, 'activation_f': 'sigmoid'}
+    ]
+
+    X = [[1, 2, 3, 4]]
+    Y = [[1, 1]]
+
+    simple_network = Network(simple_network_shape)
+    simple_network.set_weights()
+    simple_network.train(X, Y)
+
+    out = simple_network.get_output()
+    print(out)
+
+
+def test_keras():
+    model = models.Sequential()
+    model.add(layers.Dense(units = 4))
+    model.add(layers.Dense(units = 3))
+    model.add(layers.Dense(units = 2))
+
+    model.compile()
+
+
 if __name__ == '__main__':
     # main2()
     # test()
-    train()
+    test3()
+    test_keras()

@@ -44,5 +44,5 @@ class Layer:
         for i, w_row in enumerate(weights_m):
             weights = w_row[1:]
             bias = w_row[0]
-            self.neurons[i].weights = weights
+            self.neurons[i].weights = np.array(weights)
             self.neurons[i].bias = bias
