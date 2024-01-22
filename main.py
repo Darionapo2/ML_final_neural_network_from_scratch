@@ -110,17 +110,14 @@ def main2():
     print(mu)
 
     best_val_loss = float('inf')
-    tolerance = 0.2 #valore no sense
+    tolerance = 0.2  # valore no sense
     input_v = [1, 0]
-
 
     d_network = Network(digits_network_shape)
     first_hidden_layer_weights = np.array(d_network.hidden_layers[0].get_weights())
 
     d_network.hidden_layers[0].input_weights_from_matrix(wih)
     d_network.output_layer.input_weights_from_matrix(who)
-
-
 
     d_network.forwardpropagate(input_v)
     out = d_network.get_output()
@@ -141,7 +138,6 @@ def main2():
     gradient_weights, gradient_bias = d_network.accumulatechange(deltas)
 
     mu, mu_bias = d_network.adjust_weights(gradient_weights, gradient_bias, 0.9, mu, mu_bias)
-
 
     # final_value = d_network.performance_evaluation(input_v,)
 
@@ -207,11 +203,9 @@ def train():
 
     print('random output:', t_network.get_output())
 
+    print(t_network.hidden_layers[1].get_weights())
+
     t_network.forwardpropagate(input_vector)
-
-
-
-
 
 
 if __name__ == '__main__':
