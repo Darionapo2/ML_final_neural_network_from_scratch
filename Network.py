@@ -171,15 +171,17 @@ class Network:
         new_mu_bias = []
         for previous_layer, current_layer in zip(layers[:-1], layers[1:]):
             for j, current_neuron in enumerate(current_layer.neurons):
-                # updated_weights = [wh for wh in current_neuron.weights]
-                # g_weights_layer = weights_gradient[j]
+                updated_weights = [wh for wh in current_neuron.weights]
+                g_weights_layer = weights_gradient[j]
                 mu_layer = []
                 for i, previous_neuron in enumerate(previous_layer.neurons):
-                    mu_layer.append(learning_rate * weights_gradient[j][i])
-                    current_neuron.weights[i] -= (learning_rate * weights_gradient[j][i]) + mu[j][i]
+                    mu_layer.append(learning_rate * g_weights_layer[i])
+                    updated_weights[i] -= (learning_rate * g_weights_layer[i]) + mu[j][i]
+                current_neuron.weights = updated_weights
                 current_neuron.bias -= learning_rate * bias_gradient[j] + mu_bias[j]
                 new_mu.append(mu_layer)
                 new_mu_bias.append(learning_rate * bias_gradient[j])
+
         return new_mu, new_mu_bias
 
     def performance_evaluation(self, expected_output: list, val_set: list) -> float:
