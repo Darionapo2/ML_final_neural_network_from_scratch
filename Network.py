@@ -5,6 +5,8 @@ from utils import sigmoid, activation_functions, derivatives, error, get_differe
     normal_distribution
 import numpy as np
 from typing import Callable
+import math
+import sys
 
 
 class Network:
@@ -108,11 +110,15 @@ class Network:
         out_activation_f = self.output_layer.activation_f.__name__
         derived_act_function = derivatives[out_activation_f]
 
+
         derivs = [derived_act_function(nr.net) for nr in self.output_layer.neurons]
+
         print('net', [nr.net for nr in self.output_layer.neurons])
         print('derivs:', derivs)
+        ''' dovrebbe servire solo nel nostro esercizio per controllare
         if derivative_const:
             diff_vector = np.multiply(diff_vector, -2)
+            '''
         delta.append(np.multiply(diff_vector, derivs))
         reversed_layers = self.get_weighted_layers()[::-1]
         # previous_layer ==> h + 1, in respect of the inverted order of layers
@@ -165,15 +171,31 @@ class Network:
         new_mu_bias = []
         for previous_layer, current_layer in zip(layers[:-1], layers[1:]):
             for j, current_neuron in enumerate(current_layer.neurons):
-                updated_weights = [wh for wh in current_neuron.weights]
-                g_weights_layer = weights_gradient[j]
+                # updated_weights = [wh for wh in current_neuron.weights]
+                # g_weights_layer = weights_gradient[j]
                 mu_layer = []
                 for i, previous_neuron in enumerate(previous_layer.neurons):
-                    mu_layer.append(learning_rate * g_weights_layer[i])
-                    updated_weights[i] -= (learning_rate * g_weights_layer[i]) + mu[j][i]
-                current_neuron.weights = updated_weights
+                    mu_layer.append(learning_rate * weights_gradient[j][i])
+                    current_neuron.weights[i] -= (learning_rate * weights_gradient[j][i]) + mu[j][i]
                 current_neuron.bias -= learning_rate * bias_gradient[j] + mu_bias[j]
                 new_mu.append(mu_layer)
                 new_mu_bias.append(learning_rate * bias_gradient[j])
-
         return new_mu, new_mu_bias
+
+    def performance_evaluation(self, expected_output: list, val_set: list) -> float:
+        """this calculates the loss function which is the cross validation metric"""
+        self.forwardpropagate(val_set)
+        y_pred = self.get_output()
+        cross_entropy = 0
+        eps = sys.float_info.epsilon
+        for i in range(len(expected_output)):
+            cross_entropy -= expected_output[i] * math.log(y_pred[i], eps)
+        return cross_entropy
+
+
+
+
+
+
+
+

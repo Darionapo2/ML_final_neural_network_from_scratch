@@ -3,18 +3,24 @@ import numpy as np
 from utils import sigmoid, ones, error, normal_distribution, derived_sigmoid
 
 
-def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> list:
+def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple([list, list]):
     with open(path, 'r+') as dataset:
-        text = dataset.read()
-        lines = text.split('\n')
+
+        lines = dataset.readlines()
 
         data = []
-        del lines[-1]
+        expected_pred = []
+        del lines[0], lines[-1]
 
         for line in lines:
-            data.append(np.array(line.split(' '), dtype=int))
+            bin = [int(num) for num in line.split()[:-10]]
+            data.append(bin)
 
-    return data
+        for line in lines:
+            bin = [int(exp) for exp in line.split()[256:]]
+            expected_pred.append(bin)
+
+    return data, expected_pred
 
 
 def main():
@@ -88,13 +94,25 @@ def main2():
     digits_network_shape = [
         {'neurons_number': 2, 'activation_f': ''},
         {'neurons_number': 2, 'activation_f': 'sigmoid'},
-        {'neurons_number': 1, 'activation_f': 'sigmoid'}
+        {'neurons_number': 1, 'activation_f': 'softmax'}
     ]
 
     wih = np.array([[1, 1, 2],
                     [2, 2, 1]])
-
     who = np.array([[1, 1, 1]])
+    mu = []
+    mu_bias = []
+    for j, cha in enumerate(gradient_weights):
+        mu.append([])
+        for i, ch in enumerate(cha):
+            mu[j].append(0.0)
+        mu_bias.append(0.0)
+    print(mu)
+
+    best_val_loss = float('inf')
+    tolerance = 0.2 #valore no sense
+    input_v = [1, 0]
+
 
     d_network = Network(digits_network_shape)
     first_hidden_layer_weights = np.array(d_network.hidden_layers[0].get_weights())
@@ -102,7 +120,7 @@ def main2():
     d_network.hidden_layers[0].input_weights_from_matrix(wih)
     d_network.output_layer.input_weights_from_matrix(who)
 
-    input_v = [1, 0]
+
 
     d_network.forwardpropagate(input_v)
     out = d_network.get_output()
@@ -110,33 +128,22 @@ def main2():
 
     E = d_network.evaluate_results([0])
     print('E:', E)
-
-    for j, layer in enumerate(d_network.get_weighted_layers()):
-        for i, neuron in enumerate(layer.neurons):
-            for k in range(len(neuron.weights)):
-                print(f'w[{j+1}][{k+1}] = {neuron.weights[k]}')
-            print(f'w[{j+1}][0] = {neuron.bias}')
+    '''
+    loss = d_network.performance_evaluation(input_v,)
+    if epoch > 0 and (best_val_loss - loss) < tolerance:
+        break
+    elif loss < best_val_loss:
+            best_val_loss = loss
+    '''
 
     # to do: remember to insert the dataset as an attribute of the network class
     deltas = d_network.backpropagate([0], True)
     gradient_weights, gradient_bias = d_network.accumulatechange(deltas)
-    mu = []
-    mu_bias = []
-    for j, cha in enumerate(gradient_weights):
-        mu.append([])
-        for i, ch in enumerate(cha):
-            print(f'gradient w[{j}][{i}]: {ch}')
-            mu[j].append(0.0)
-        mu_bias.append(0.0)
-        print('gradeint bias: ', gradient_bias[j])
-    print(mu)
+
     mu, mu_bias = d_network.adjust_weights(gradient_weights, gradient_bias, 0.9, mu, mu_bias)
 
-    for j, layer in enumerate(d_network.get_weighted_layers()):
-        for i, neuron in enumerate(layer.neurons):
-            for k in range(len(neuron.weights)):
-                print(f'w[{j}][{k+1}] = {neuron.weights[k]}')
-            print(f'w[{j}][0] = {neuron.bias}')
+
+    # final_value = d_network.performance_evaluation(input_v,)
 
 
 def test():
@@ -167,6 +174,47 @@ def test():
     print('delta1: ', delta1)
 
 
+def train():
+    digits_network_shape = [
+        {'neurons_number': 256, 'activation_f': ''},
+        {'neurons_number': 6, 'activation_f': 'sigmoid'},
+        {'neurons_number': 6, 'activation_f': 'sigmoid'},
+        {'neurons_number': 10, 'activation_f': 'sigmoid'}
+    ]
+
+    input_vector, real_output = read_dataset()
+    print(len(input_vector[0]))
+    t_network = Network(digits_network_shape)
+    t_network.set_weights()
+
+    t_network.forwardpropagate(input_vector[0])
+    print('output:', t_network.get_output())
+    print('error between this output and the reference', t_network.evaluate_results(real_output))
+
+    print('random weights: ', len(t_network.get_weights()[2]))
+    print(len(real_output))
+    deltas = t_network.backpropagate(real_output)
+    gradient_w, gradient_b = t_network.accumulatechange(deltas)
+    mu = []
+    mu_bias = []
+    for j, cha in enumerate(gradient_w):
+        mu.append([])
+        for i, ch in enumerate(cha):
+            mu[j].append(0.0)
+        mu_bias.append(0.0)
+
+    mu, mu_bias = t_network.adjust_weights(gradient_w, gradient_b, 0.9, mu, mu_bias)
+
+    print('random output:', t_network.get_output())
+
+    t_network.forwardpropagate(input_vector)
+
+
+
+
+
+
 if __name__ == '__main__':
-    main2()
+    # main2()
     # test()
+    train()
