@@ -33,6 +33,7 @@ def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple:
     return data, expected_pred
 
 
+
 def main():
     digits_network_shape = [
         {'neurons_number': 256, 'activation_f': ''},
