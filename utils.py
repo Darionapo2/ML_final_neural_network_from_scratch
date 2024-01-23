@@ -8,7 +8,7 @@ from numpy import typing
 
 
 def sigmoid(x: float) -> float:
-    return 1 / (1 + pow(e, -x))
+    return 1 / (1 + np.exp(-x))
 
 
 def derived_sigmoid(x: float) -> float:
@@ -23,27 +23,40 @@ def const_1(x: float) -> int:
     return 1
 
 
-def softmax(x) -> np.array:
-    exp_values = np.exp(x)
-    exp_sum = np.sum(exp_values)
-    return exp_values / exp_sum
+def softmax(neuron_net: float, neurons: list) -> float:
+    exp_sum = 0
+    for nr in neurons:
+        exp_sum += np.exp(nr.net)
+    exp_value = np.exp(neuron_net)
+    print(exp_value)
+    return exp_value / exp_sum
 
 
-def derived_softmax(x):
-    s = softmax(x)
-    return s * (1 - s)
+def derives_softmax_output_l(neurons: list, diff: list) -> list:
+    derivs = []
+    for j, nr1 in enumerate(neurons):
+        out_j = nr1.net
+        dj = 0
+        for i, nr2 in enumerate(neurons):
+            out_i = nr2.net
+            cond = 1 if i == j else out_i
+            dj += (-1) * (diff[i] * out_i) * out_j * (cond - out_i)
+        derivs.append(dj)
+        # derivs.append(sum((-1) * diff[i] * nr2.net * nr1.net * (1 - nr2.net) if i == j else (-1) * diff[i] *
+        # nr2.net * nr1.net * nr2.net for i, nr2 in enumerate(neurons)))
+    return derivs
 
 
 activation_functions = {
     'sigmoid': sigmoid,
     'identity': identity,
-    'softmax': softmax
+    'softmax': softmax,
 }
 
 derivatives = {
     'sigmoid': derived_sigmoid,
     'identity': const_1,
-    'softmax': derived_softmax
+    'softmax': derives_softmax_output_l
 }
 
 

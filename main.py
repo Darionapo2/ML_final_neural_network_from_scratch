@@ -2,28 +2,33 @@ from Network import Network
 import os
 import numpy as np
 from utils import sigmoid, ones, error, normal_distribution, derived_sigmoid
-import keras
-from keras import layers, models
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Input
 
-os.environ['KERAS_BACKEND'] = 'tensorflow'
 
+#TF_ENABLE_ONEDNN_OPTS=0
 
-def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple([list, list]):
+def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple:
     with open(path, 'r+') as dataset:
-
         lines = dataset.readlines()
 
+        # Initialize empty lists to store data and expected_pred
         data = []
         expected_pred = []
-        del lines[0], lines[-1]
 
         for line in lines:
-            bin = [int(num) for num in line.split()[:-10]]
-            data.append(bin)
+            # Split the line into input data and expected output
+            input_data = [int(num) for num in line.split()[:-10]]
+            expected_output = [int(exp) for exp in line.split()[256:]]
 
-        for line in lines:
-            bin = [int(exp) for exp in line.split()[256:]]
-            expected_pred.append(bin)
+            # Append the lists to the respective lists
+            data.append(np.array(input_data))
+            expected_pred.append(np.array(expected_output))
+
+        # Convert lists to NumPy arrays
+        data = np.array(data)
+        expected_pred = np.array(expected_pred)
 
     return data, expected_pred
 
@@ -203,40 +208,135 @@ def train():
 
     print('random output:', t_network.get_output())
 
-    print(t_network.hidden_layers[1].get_weights())
-
     t_network.forwardpropagate(input_vector)
 
 
-def test3():
+def test3(weights: list, biases: list):
     simple_network_shape = [
         {'neurons_number': 4, 'activation_f': ''},
         {'neurons_number': 3, 'activation_f': 'sigmoid'},
         {'neurons_number': 2, 'activation_f': 'sigmoid'}
     ]
 
-    X = [[1, 2, 3, 4]]
-    Y = [[1, 1]]
+    X = [[1, 2, 3, 4], [2, 2, 2, 2]]
+    Y = [[1, 1], [3, 3]]
+
 
     simple_network = Network(simple_network_shape)
-    simple_network.set_weights()
+    weights_tot_h_l = []
+    for bias in biases[:-1]:
+        weights_tot_h_l.append(bias)
+    for weight in weights[0]:
+        weights_tot_h_l.append(weight)
+
+
+    hidden_layer_weights = np.transpose(weights_tot_h_l)
+
+    weights_tot_o_l = []
+    for bias in biases[1:]:
+        weights_tot_o_l.append(bias)
+    for weight in weights[1]:
+        weights_tot_o_l.append(weight)
+    output_layer_weights = np.transpose(weights_tot_o_l)
+    print(hidden_layer_weights)
+    print(output_layer_weights)
+
+    simple_network.hidden_layers[0].input_weights_from_matrix(hidden_layer_weights)
+
+    simple_network.output_layer.input_weights_from_matrix(output_layer_weights)
     simple_network.train(X, Y)
 
+    print('pesi dopo back', simple_network.get_weights())
+
+    #simple_network.forwardpropagate([2, 2, 1, 4])
+
     out = simple_network.get_output()
-    print(out)
+    print('output our model = ', out)
 
 
 def test_keras():
-    model = models.Sequential()
-    model.add(layers.Dense(units = 4))
-    model.add(layers.Dense(units = 3))
-    model.add(layers.Dense(units = 2))
+    X = np.array(([[1, 2, 3, 4], [2, 2, 2, 2]]))
+    Y = np.array(([[1, 1], [3, 3]]))
 
-    model.compile()
+    model = Sequential()
+
+
+
+    model.add(Input(shape=(4,)))
+    model.add(Dense(units=3, activation='sigmoid', name='hidden_layer_1'))
+    model.add(Dense(units=2, activation='sigmoid', name='output_layer'))
+    model.summary()
+    sgd = tf.keras.optimizers.SGD(learning_rate=1, momentum=1)
+    model.compile(optimizer=sgd, loss='binary_crossentropy', metrics=['accuracy'])
+
+    l = [np.array([[1, 1, 2],
+       [1, 1, 2],
+       [2, 1, 2],
+       [1, 3, 2]]), np.array([0,0,0])]
+
+    o = [np.array([[1,1],
+       [1, 2],
+       [3, 1]]), np.array([0,0])]
+    model.layers[0].set_weights(l)
+    print(model.layers[0].name)
+    w = model.layers[0].get_weights()
+    print(w)
+    model.layers[1].set_weights(o)
+    print(model.layers[1].name)
+    w2 = model.layers[1].get_weights()
+
+    print(w2)
+
+
+    w = model.get_weights()
+    weights = []
+    biases = []
+
+
+    for w1, b in zip(w[::2], w[1::2]):
+        weights.append(w1)
+        biases.append(b)
+    # weights.append([w[i] for i in range(0, len(w), 2)])
+    # biases.append([w[i] for i in range(1, len(w), 2)])
+
+
+
+    model.fit(X, Y, epochs=0, batch_size=1)
+
+    #model.predict(np.array(([[2, 2, 1, 4]])))
+
+
+    result = model.predict(X)
+    print('output keras = ', result)
+
+
+
+    return weights, biases
+
+def test4():
+    digits_network_shape = [
+        {'neurons_number': 256, 'activation_f': ''},
+        {'neurons_number': 6, 'activation_f': 'sigmoid'},
+        {'neurons_number': 6, 'activation_f': 'sigmoid'},
+        {'neurons_number': 10, 'activation_f': 'softmax'}
+    ]
+
+    input_vector, real_output = read_dataset()
+
+    d_network = Network(digits_network_shape)
+    d_network.set_weights()
+
+    d_network.train(input_vector[0], real_output[0])
+
+    out = d_network.get_output()
+    print('out', out)
+
 
 
 if __name__ == '__main__':
     # main2()
     # test()
-    test3()
-    test_keras()
+    # w, b = test_keras()
+    # test3(w, b)
+    test4()
+

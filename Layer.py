@@ -3,7 +3,7 @@ from typing import Callable
 import numpy as np
 
 from Neuron import Neuron
-from utils import sigmoid
+from utils import sigmoid, softmax
 
 
 class Layer:
@@ -32,7 +32,10 @@ class Layer:
 
     def activate(self):
         for neuron in self.neurons:
-            neuron.out = neuron.activation_function(neuron.net)
+            if neuron.activation_function == softmax:
+                neuron.out = neuron.activation_function(neuron.net, self.neurons)
+            else:
+                neuron.out = neuron.activation_function(neuron.net)
 
     def get_output_values(self) -> list[float]:
         return [nr.out for nr in self.neurons]

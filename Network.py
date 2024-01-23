@@ -1,10 +1,6 @@
-import pprint
-
 from Layer import *
-from utils import sigmoid, activation_functions, derivatives, error, get_difference, \
-    normal_distribution
-import numpy as np
-from typing import Callable
+from utils import sigmoid, activation_functions, derivatives, error, get_difference, normal_distribution
+from utils import derives_softmax_output_l
 
 
 class Network:
@@ -55,7 +51,7 @@ class Network:
         return self.hidden_layers + [self.output_layer]
 
     def set_weights(self):
-        self._set_weights(criteria = normal_distribution)
+        self._set_weights(criteria=normal_distribution)
 
     def _set_weights(self, criteria: Callable):
         n_prev_layer = 0
@@ -108,14 +104,15 @@ class Network:
         diff_vector = get_difference(d, outs)
 
         out_activation_f = self.output_layer.activation_f.__name__
-        derived_act_function = derivatives[out_activation_f]
-
-        derivs = [derived_act_function(nr.net) for nr in self.output_layer.neurons]
-        print('net', [nr.net for nr in self.output_layer.neurons])
-        print('derivs:', derivs)
-        if derivative_const:
-            diff_vector = np.multiply(diff_vector, -2)
-        delta.append(np.multiply(diff_vector, derivs))
+        if out_activation_f == 'softmax':
+            derivs = derives_softmax_output_l(self.output_layer.neurons, diff_vector)
+            delta.append(derivs)
+        else:
+            derived_act_function = derivatives[out_activation_f]
+            derivs = [derived_act_function(nr.net) for nr in self.output_layer.neurons]
+            if derivative_const:
+                diff_vector = np.multiply(diff_vector, -2)
+            delta.append(np.multiply(diff_vector, derivs))
         reversed_layers = self.get_weighted_layers()[::-1]
         # previous_layer ==> h + 1, in respect of the inverted order of layers
         # current_layer ==> h
@@ -191,7 +188,7 @@ class Network:
 
         return new_mu, new_mu_bias
 
-    def adjust_weights_dario(self, learning_rate: float, momentum: float = 1):
+    def adjust_weights(self, learning_rate: float, momentum: float = 1):
         w_layers = self.get_weighted_layers()
 
         for layer in w_layers:
@@ -218,4 +215,4 @@ class Network:
             self.forwardpropagate(x)
             deltas = self.backpropagate(y)
             self.accumulatechange(deltas)
-            self.adjust_weights_dario(1)
+            self.adjust_weights(1)
