@@ -64,6 +64,8 @@ def normal_distribution(n: int) -> np.ndarray:
     sigma = np.sqrt(2 / n)
     return np.random.normal(0, sigma, size=(n,))
 
+def np_random(size) -> np.array:
+    return np.random.uniform(low = -1, high = 1, size = size)
 
 def ones(n: int) -> list[int]:
     return [1] * n

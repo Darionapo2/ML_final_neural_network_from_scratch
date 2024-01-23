@@ -1,7 +1,6 @@
 from Layer import *
 from utils import sigmoid, activation_functions, derivatives, error, get_difference, normal_distribution
-from utils import derives_softmax_output_l
-
+from utils import derives_softmax_output_l, np_random
 
 class Network:
     input_layer: Layer
@@ -51,7 +50,7 @@ class Network:
         return self.hidden_layers + [self.output_layer]
 
     def set_weights(self):
-        self._set_weights(criteria=normal_distribution)
+        self._set_weights(criteria = np_random)
 
     def _set_weights(self, criteria: Callable):
         n_prev_layer = 0
@@ -153,41 +152,6 @@ class Network:
                 current_neuron.accumulate_change_bias = deltas[curr_layer_index][j]
             curr_layer_index += 1
 
-    # posso palesemente usare direttamente current neuron weights ma non mi sembra bello bho, comunque lo toglieremo
-    def adjust_weights(self, weights_gradient: list[np.array], bias_gradient: list,
-                       learning_rate: float,
-                       mu: list[np.array], mu_bias: np.array) -> tuple[list[list], list]:
-        '''
-        :param weights_gradient: change of weights list(list()...list())
-        :param bias_gradient: change of the biases
-        :param learning_rate:
-        :param mu:
-        :param mu_bias:
-        :return:
-        '''
-
-        layers = self.get_weighted_layers()
-        new_mu = []
-        new_mu_bias = []
-
-        for previous_layer, current_layer in zip(layers[:-1], layers[1:]):
-            for j, current_neuron in enumerate(current_layer.neurons):
-
-                updated_weights = [wh for wh in current_neuron.weights]
-                g_weights_layer = weights_gradient[j]
-                mu_layer = []
-
-                for i, previous_neuron in enumerate(previous_layer.neurons):
-                    mu_layer.append(learning_rate * g_weights_layer[i])
-                    updated_weights[i] -= (learning_rate * g_weights_layer[i]) + mu[j][i]
-
-                current_neuron.weights = updated_weights
-                current_neuron.bias -= learning_rate * bias_gradient[j] + mu_bias[j]
-                new_mu.append(mu_layer)
-                new_mu_bias.append(learning_rate * bias_gradient[j])
-
-        return new_mu, new_mu_bias
-
     def adjust_weights(self, learning_rate: float, momentum: float = 1):
         w_layers = self.get_weighted_layers()
 
@@ -215,4 +179,5 @@ class Network:
             self.forwardpropagate(x)
             deltas = self.backpropagate(y)
             self.accumulatechange(deltas)
-            self.adjust_weights(1)
+            self.adjust_weights(0.05)
+            print(error(y, self.get_output()))

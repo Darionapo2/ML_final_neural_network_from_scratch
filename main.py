@@ -7,7 +7,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input
 
 
-#TF_ENABLE_ONEDNN_OPTS=0
+# TF_ENABLE_ONEDNN_OPTS=0
 
 def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple:
     with open(path, 'r+') as dataset:
@@ -17,7 +17,7 @@ def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple:
         data = []
         expected_pred = []
 
-        for line in lines:
+        for line in lines[1:]:
             # Split the line into input data and expected output
             input_data = [int(num) for num in line.split()[:-10]]
             expected_output = [int(exp) for exp in line.split()[256:]]
@@ -31,7 +31,6 @@ def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple:
         expected_pred = np.array(expected_pred)
 
     return data, expected_pred
-
 
 
 def main():
@@ -222,14 +221,12 @@ def test3(weights: list, biases: list):
     X = [[1, 2, 3, 4], [2, 2, 2, 2]]
     Y = [[1, 1], [3, 3]]
 
-
     simple_network = Network(simple_network_shape)
     weights_tot_h_l = []
     for bias in biases[:-1]:
         weights_tot_h_l.append(bias)
     for weight in weights[0]:
         weights_tot_h_l.append(weight)
-
 
     hidden_layer_weights = np.transpose(weights_tot_h_l)
 
@@ -249,7 +246,7 @@ def test3(weights: list, biases: list):
 
     print('pesi dopo back', simple_network.get_weights())
 
-    #simple_network.forwardpropagate([2, 2, 1, 4])
+    # simple_network.forwardpropagate([2, 2, 1, 4])
 
     out = simple_network.get_output()
     print('output our model = ', out)
@@ -261,23 +258,21 @@ def test_keras():
 
     model = Sequential()
 
-
-
-    model.add(Input(shape=(4,)))
-    model.add(Dense(units=3, activation='sigmoid', name='hidden_layer_1'))
-    model.add(Dense(units=2, activation='sigmoid', name='output_layer'))
+    model.add(Input(shape = (4,)))
+    model.add(Dense(units = 3, activation = 'sigmoid', name = 'hidden_layer_1'))
+    model.add(Dense(units = 2, activation = 'sigmoid', name = 'output_layer'))
     model.summary()
-    sgd = tf.keras.optimizers.SGD(learning_rate=1, momentum=1)
-    model.compile(optimizer=sgd, loss='binary_crossentropy', metrics=['accuracy'])
+    sgd = tf.keras.optimizers.SGD(learning_rate = 1, momentum = 1)
+    model.compile(optimizer = sgd, loss = 'binary_crossentropy', metrics = ['accuracy'])
 
     l = [np.array([[1, 1, 2],
-       [1, 1, 2],
-       [2, 1, 2],
-       [1, 3, 2]]), np.array([0,0,0])]
+                   [1, 1, 2],
+                   [2, 1, 2],
+                   [1, 3, 2]]), np.array([0, 0, 0])]
 
-    o = [np.array([[1,1],
-       [1, 2],
-       [3, 1]]), np.array([0,0])]
+    o = [np.array([[1, 1],
+                   [1, 2],
+                   [3, 1]]), np.array([0, 0])]
     model.layers[0].set_weights(l)
     print(model.layers[0].name)
     w = model.layers[0].get_weights()
@@ -288,11 +283,9 @@ def test_keras():
 
     print(w2)
 
-
     w = model.get_weights()
     weights = []
     biases = []
-
 
     for w1, b in zip(w[::2], w[1::2]):
         weights.append(w1)
@@ -300,38 +293,63 @@ def test_keras():
     # weights.append([w[i] for i in range(0, len(w), 2)])
     # biases.append([w[i] for i in range(1, len(w), 2)])
 
+    model.fit(X, Y, epochs = 0, batch_size = 1)
 
-
-    model.fit(X, Y, epochs=0, batch_size=1)
-
-    #model.predict(np.array(([[2, 2, 1, 4]])))
-
+    # model.predict(np.array(([[2, 2, 1, 4]])))
 
     result = model.predict(X)
     print('output keras = ', result)
 
-
-
     return weights, biases
+
 
 def test4():
     digits_network_shape = [
         {'neurons_number': 256, 'activation_f': ''},
         {'neurons_number': 6, 'activation_f': 'sigmoid'},
         {'neurons_number': 6, 'activation_f': 'sigmoid'},
-        {'neurons_number': 10, 'activation_f': 'softmax'}
+        {'neurons_number': 10, 'activation_f': 'sigmoid'}
     ]
 
-    input_vector, real_output = read_dataset()
+    X, y = read_dataset()
 
     d_network = Network(digits_network_shape)
     d_network.set_weights()
 
-    d_network.train(input_vector[0], real_output[0])
+    w = d_network.get_weights()
+    print(w)
+
+    print(X, y)
+
+    d_network.train(X, y)
 
     out = d_network.get_output()
     print('out', out)
 
+
+def xor_train
+
+def test_keras2():
+
+    X, Y = read_dataset()
+
+    model = Sequential()
+
+    model.add(Input(shape=(256,)))
+    model.add(Dense(units=6, activation='sigmoid', name='hidden_layer_1'))
+    model.add(Dense(units=6, activation='sigmoid', name='hidden_layer_2'))
+    model.add(Dense(units=10, activation='softmax', name='output_layer'))
+    model.summary()
+
+    sgd = tf.keras.optimizers.SGD(learning_rate=0.75, momentum=1)
+    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
+
+    model.fit(X, Y, epochs=3, batch_size=1)
+
+    X_val, Y_val = read_dataset('datasets/digits/test_digits.dat')
+
+    result = model.predict([X_val[1]])
+    print(result)
 
 
 if __name__ == '__main__':
@@ -340,4 +358,4 @@ if __name__ == '__main__':
     # w, b = test_keras()
     # test3(w, b)
     test4()
-
+    # test_keras2()
