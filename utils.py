@@ -81,3 +81,8 @@ def get_error_vector(d: np.array, layer: Layer):
 
 def get_difference(d: np.array, o: np.array):
     return np.subtract(d, o)
+
+def categorical_cross_entropy(y, y_pred):
+    epsilon = 1e-15
+    y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
+    return - np.sum(y * np.log(y_pred), axis=-1)

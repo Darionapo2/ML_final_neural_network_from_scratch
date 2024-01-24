@@ -1,3 +1,5 @@
+import pprint
+
 from Network import Network
 import os
 import numpy as np
@@ -8,7 +10,6 @@ from tensorflow.keras.layers import Dense, Input
 
 
 # TF_ENABLE_ONEDNN_OPTS=0
-
 def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple:
     with open(path, 'r+') as dataset:
         lines = dataset.readlines()
@@ -18,19 +19,31 @@ def read_dataset(path: str = 'datasets/digits/train_digits.dat') -> tuple:
         expected_pred = []
 
         for line in lines[1:]:
-            # Split the line into input data and expected output
             input_data = [int(num) for num in line.split()[:-10]]
             expected_output = [int(exp) for exp in line.split()[256:]]
 
-            # Append the lists to the respective lists
-            data.append(np.array(input_data))
-            expected_pred.append(np.array(expected_output))
+            data.append(input_data)
+            expected_pred.append(expected_output)
 
-        # Convert lists to NumPy arrays
-        data = np.array(data)
-        expected_pred = np.array(expected_pred)
 
     return data, expected_pred
+
+def read_dataset_dario(filename: str):
+    X = []
+    Y = []
+
+    with open(filename, 'r+') as file:
+        text = file.read()
+        lines = text.split('\n')
+
+        data_size, label_size, n_records = [int(v) for v in lines[0].split(' ')]
+
+        for line in lines[1:]:
+            if len(line) > 1:
+                X.append([int(v) for v in line.split(' ')[:-label_size]])
+                Y.append([int(v) for v in line.split(' ')[data_size:]])
+
+    return X, Y
 
 
 def main():
@@ -311,51 +324,106 @@ def test4():
         {'neurons_number': 10, 'activation_f': 'sigmoid'}
     ]
 
-    X, y = read_dataset()
+    X, y = read_dataset_dario('datasets/digits/train_digits.dat')
+    X_test, y_test = read_dataset_dario('datasets/digits/test_digits.dat')
 
     d_network = Network(digits_network_shape)
     d_network.set_weights()
 
-    w = d_network.get_weights()
-    print(w)
+    nepochs = 10000
+    for i in range(nepochs):
+        d_network.train(X, y)
 
-    print(X, y)
+    count = 0
+    for X_t, y_t in zip(X_test, y_test):
+        d_network.forwardpropagate(X_t)
+        out = d_network.get_output()
+        if out.index(max(out)) == y_test.index(1):
+            count += 1
+        print('out', out)
 
-    d_network.train(X, y)
-
-    out = d_network.get_output()
-    print('out', out)
+    acc = count/len(X_test)
+    print('acc:', acc)
 
 
-def xor_train
+def xor_train():
+    xor_network = [
+        {'neurons_number': 2, 'activation_f': ''},
+        {'neurons_number': 2, 'activation_f': 'sigmoid'},
+        {'neurons_number': 2, 'activation_f': 'sigmoid'}
+    ]
+
+    xor_network = Network(xor_network)
+    xor_network.set_weights()
+    print(xor_network.get_weights())
+
+    X, Y = read_dataset_dario('datasets/xor/train_xor.dat')
+    print('X:', X)
+
+    nepochs = 10000
+    # diff = []
+    # w = []
+    for i in range(nepochs):
+        loss = xor_network.train(X, Y)
+        print(xor_network.get_weights())
+
+
+    xor_network.forwardpropagate([-1,-1])
+    out00 = xor_network.get_output()
+    xor_network.forwardpropagate([-1,1])
+    out01 = xor_network.get_output()
+    xor_network.forwardpropagate([1,-1])
+    out10 = xor_network.get_output()
+    xor_network.forwardpropagate([1,1])
+    out11 = xor_network.get_output()
+
+    print('out:', out00, out01, out10, out11)
 
 def test_keras2():
 
-    X, Y = read_dataset()
+    X, Y = read_dataset_dario('datasets/xor/train_xor.dat')
+    print(X)
 
     model = Sequential()
 
-    model.add(Input(shape=(256,)))
-    model.add(Dense(units=6, activation='sigmoid', name='hidden_layer_1'))
-    model.add(Dense(units=6, activation='sigmoid', name='hidden_layer_2'))
-    model.add(Dense(units=10, activation='softmax', name='output_layer'))
+    model.add(Input(shape=(2,)))
+    model.add(Dense(units=2, activation='tanh', name='hidden_layer_1'))
+    model.add(Dense(units=2, activation='sigmoid', name='output_layer'))
     model.summary()
 
-    sgd = tf.keras.optimizers.SGD(learning_rate=0.75, momentum=1)
-    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(loss = 'binary_crossentropy', metrics=['accuracy'])
 
-    model.fit(X, Y, epochs=3, batch_size=1)
+    model.fit(X, Y, epochs = 10000, batch_size=1)
 
-    X_val, Y_val = read_dataset('datasets/digits/test_digits.dat')
+    X_val, Y_val = read_dataset_dario('datasets/xor/test_xor.dat')
 
-    result = model.predict([X_val[1]])
+    result = model.predict([[1,1]])
     print(result)
+
+def test_one_neuron():
+    one_network = [
+        {'neurons_number': 1, 'activation_f': ''},
+        {'neurons_number': 1, 'activation_f': 'sigmoid'},
+    ]
+
+    one_network = Network(one_network)
+    one_network.set_weights()
+
+    for i in range(10000):
+        one_network.train([[1]], [[1]])
+
+        print('w ',one_network.get_weights())
+
+    for i in range(1000):
+        one_network.forwardpropagate([[1]])
+        print('out:', one_network.get_output())
 
 
 if __name__ == '__main__':
     # main2()
-    # test()
+    test4()
     # w, b = test_keras()
     # test3(w, b)
-    test4()
+    # xor_train()
     # test_keras2()
+    #test_one_neuron()

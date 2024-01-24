@@ -20,7 +20,6 @@ class Layer:
         return f'<Layer({self.n}, {self.activation_f})>'
 
     def feed(self, input_data: np.array) -> bool:
-
         if len(input_data) != self.n:
             print('Error: invalid input data.')
             return False

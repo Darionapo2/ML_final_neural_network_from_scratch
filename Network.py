@@ -1,3 +1,5 @@
+import pprint
+
 from Layer import *
 from utils import sigmoid, activation_functions, derivatives, error, get_difference, normal_distribution
 from utils import derives_softmax_output_l, np_random
@@ -63,6 +65,7 @@ class Network:
                 neuron.bias = criteria(1)[0]
 
                 neuron.previous_change = np.zeros(n_prev_layer)
+                neuron.accumulate_change = np.zeros(n_prev_layer)
             n_prev_layer = layer.n
 
     def forwardpropagate(self, input_data: np.array):
@@ -111,7 +114,10 @@ class Network:
             derivs = [derived_act_function(nr.net) for nr in self.output_layer.neurons]
             if derivative_const:
                 diff_vector = np.multiply(diff_vector, -2)
-            delta.append(np.multiply(diff_vector, derivs))
+            delta.append(-np.multiply(diff_vector, derivs))
+
+        # delta = list(np.array(delta) * 0.02) # TODO: to remove
+
         reversed_layers = self.get_weighted_layers()[::-1]
         # previous_layer ==> h + 1, in respect of the inverted order of layers
         # current_layer ==> h
@@ -148,13 +154,15 @@ class Network:
                 for i, prev_layer_nr in enumerate(previous_layer.neurons):
                     # print(' previous_layer.neurons[i].out ', i, previous_layer.neurons[i].out)
                     acc_change.append(deltas[curr_layer_index][j] * previous_layer.neurons[i].out)
-                current_neuron.accumulate_change = acc_change
-                current_neuron.accumulate_change_bias = deltas[curr_layer_index][j]
+                current_neuron.accumulate_change += acc_change
+                current_neuron.accumulate_change_bias += deltas[curr_layer_index][j]
+
+                #print('acc_change:', acc_change)
+                #print('accumulate_change_bias:', deltas[curr_layer_index][j])
             curr_layer_index += 1
 
-    def adjust_weights(self, learning_rate: float, momentum: float = 1):
+    def adjust_weights(self, learning_rate: float):
         w_layers = self.get_weighted_layers()
-
         for layer in w_layers:
             for neuron in layer.neurons:
                 acc_change = neuron.accumulate_change
@@ -163,13 +171,9 @@ class Network:
                 acc_change_lr = np.multiply(acc_change, learning_rate)
                 acc_change_bias_lr = acc_change_bias * learning_rate
 
-                neuron.weights -= (acc_change_lr + (
-                    np.multiply(momentum, neuron.previous_change)
-                ))
+                neuron.weights -= acc_change_lr
 
-                neuron.bias -= (acc_change_bias_lr + (
-                    np.multiply(momentum, neuron.previous_change_bias)
-                ))
+                neuron.bias -= acc_change_bias_lr
 
                 neuron.previous_change = acc_change_lr
                 neuron.previous_change_bias = acc_change_bias_lr
@@ -177,7 +181,7 @@ class Network:
     def train(self, X, Y):
         for x, y in zip(X, Y):
             self.forwardpropagate(x)
-            deltas = self.backpropagate(y)
+            deltas = self.backpropagate(d = y)
             self.accumulatechange(deltas)
-            self.adjust_weights(0.05)
-            print(error(y, self.get_output()))
+        self.adjust_weights(0.5)
+
